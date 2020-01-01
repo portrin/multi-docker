@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t portrin/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true portrin/react-test npm test
+
+after_success:
+    - docker build -t portrin/multi-client ./client
+    - docker build -t portrin/multi-nginx ./nginx
+    - docker build -t portrin/multi-server ./server
+    - docker build -t portrin/multi-worker ./worker
+    # Log in to Docker hub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those img and push to docker hub
+    - docker push portrin/multi-client
+    - docker push portrin/multi-nginx
+    - docker push portrin/multi-server
+    - docker push portrin/multi-worker
